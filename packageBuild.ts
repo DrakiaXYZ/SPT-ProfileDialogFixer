@@ -27,9 +27,10 @@ console.log("Previous build files deleted.");
 // expanded upon by the mod author to allow for node modules that are used within the mod; example commented out below.
 const ignoreList = [
     "node_modules/",
-    // "node_modules/!(weighted|glob)", // Instead of excluding the entire node_modules directory, allow two node modules.
     "src/**/*.js",
     "types/",
+    "dist/",
+    "user/",
     ".git/",
     ".gitea/",
     ".eslintignore",
@@ -49,14 +50,15 @@ fs.copySync(__dirname, path.normalize(`${__dirname}/../~${modName}`), {filter:(f
 {
     return !exclude.includes(filePath);
 }});
-fs.moveSync(path.normalize(`${__dirname}/../~${modName}`), path.normalize(`${__dirname}/${modName}`), { overwrite: true });
-fs.copySync(path.normalize(`${__dirname}/${modName}`), path.normalize(`${__dirname}/dist`));
+fs.mkdirSync(path.normalize(`${__dirname}/user/mods/${modName}`), {recursive: true});
+fs.moveSync(path.normalize(`${__dirname}/../~${modName}`), path.normalize(`${__dirname}/user/mods/${modName}`), { overwrite: true });
+fs.copySync(path.normalize(`${__dirname}/user/mods/${modName}`), path.normalize(`${__dirname}/dist/user/mods/${modName}`));
 console.log("Build files copied.");
 
 // Compress the files for easy distribution. The compressed file is saved into the dist directory. When uncompressed we
 // need to be sure that it includes a directory that the user can easily copy into their game mods directory.
 zip({
-    source: modName,
+    source: "user",
     destination: `dist/${modName}.zip`,
     cwd: __dirname
 }).catch(function(err)
@@ -67,6 +69,6 @@ zip({
     console.log(`Compressed mod package to: /dist/${modName}.zip`);
 
     // Now that we're done with the compression we can delete the temporary build directory.
-    fs.rmSync(`${__dirname}/${modName}`, { force: true, recursive: true });
+    fs.rmSync(`${__dirname}/user`, { force: true, recursive: true });
     console.log("Build successful! your zip file has been created and is ready to be uploaded to hub.sp-tarkov.com/files/");
 });
